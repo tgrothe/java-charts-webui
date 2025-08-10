@@ -7,14 +7,17 @@
 </head>
 
 <body>
-<form action="/" method="post">
-    <label for="code-ta">Code:</label><br><br>
-    <textarea id="code-ta" name="code-ta" rows="20" cols="80">${codetext}</textarea><br><br>
-    <input type="submit" value="Submit">
-</form>
+<textarea id="code-ta" name="code-ta" rows="20" cols="80">${codetext}</textarea><br><br>
+<input type="button" value="Send Code" onclick="sendCode();">
 <p>
     <img src="${imgsrc}" alt="Java Charts Webui">
 </p>
+<script>
+    function sendCode() {
+        const code = document.getElementById("code-ta").value;
+        location.href = "/code/" + encodeURIComponent(code);
+    }
+</script>
 </body>
 
 </html>
