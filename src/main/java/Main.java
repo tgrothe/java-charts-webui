@@ -25,7 +25,7 @@ public class Main {
               ctx.attribute("img-src", EMPTY_IMG_SRC);
               ctx.render("index.html");
             })
-        .listen("localhost", 80)
+        .listen(80)
         .start();
   }
 }
