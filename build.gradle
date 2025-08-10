@@ -17,8 +17,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.apache.commons:commons-lang3:3.18.0'
-    implementation 'org.json:json:20250517'
+    implementation 'com.hellokaton:blade-core:2.1.2.RELEASE'
+    implementation 'org.knowm.xchart:xchart:3.8.8'
 }
 
 java {
