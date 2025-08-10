@@ -13,16 +13,16 @@ public class Main {
         .get(
             "/",
             ctx -> {
-              ctx.attribute("code-text", CODE_TEXT);
-              ctx.attribute("img-src", EMPTY_IMG_SRC);
+              ctx.attribute("codetext", CODE_TEXT);
+              ctx.attribute("imgsrc", EMPTY_IMG_SRC);
               ctx.render("index.html");
             })
         .post(
             "/",
             ctx -> {
               String codeText = ctx.bodyToString();
-              ctx.attribute("code-text", codeText);
-              ctx.attribute("img-src", EMPTY_IMG_SRC);
+              ctx.attribute("codetext", codeText);
+              ctx.attribute("imgsrc", EMPTY_IMG_SRC);
               ctx.render("index.html");
             })
         .listen(80)
