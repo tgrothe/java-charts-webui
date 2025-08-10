@@ -7,14 +7,15 @@
 </head>
 
 <body>
-<textarea id="code-ta" name="code-ta" rows="20" cols="80">${codetext}</textarea><br><br>
+<textarea id="code-ta" name="code-ta" rows="25" cols="80">${codetext}</textarea>
+<br>
 <input type="button" value="Send Code" onclick="sendCode();">
 <p>
     <img src="${imgsrc}" alt="Java Charts Webui">
 </p>
 <script>
     function sendCode() {
-        const code = document.getElementById("code-ta").value;
+        let code = document.getElementById("code-ta").value;
         location.href = "/code/" + encodeURIComponent(code);
     }
 </script>
