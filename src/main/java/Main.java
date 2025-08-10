@@ -1,4 +1,6 @@
 import com.hellokaton.blade.Blade;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 public class Main {
   private static final String CODE_TEXT =
@@ -17,10 +19,10 @@ public class Main {
               ctx.attribute("imgsrc", EMPTY_IMG_SRC);
               ctx.render("index.html");
             })
-        .post(
-            "/",
+        .get(
+            "/code/:code",
             ctx -> {
-              String codeText = ctx.bodyToString();
+              String codeText = URLDecoder.decode(ctx.pathString("code"), StandardCharsets.UTF_8);
               ctx.attribute("codetext", codeText);
               ctx.attribute("imgsrc", EMPTY_IMG_SRC);
               ctx.render("index.html");
