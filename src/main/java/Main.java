@@ -1,7 +1,6 @@
 import com.hellokaton.blade.Blade;
 import java.io.File;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -15,7 +14,7 @@ import javax.tools.JavaCompiler;
 public class Main {
   private static final String CODE_TEXT =
       """
-      public class MySupplier {
+      public class MySupplierImpl implements MySupplier {
         public int numberOfSeries() {
           return 2; // Return the number of series to be generated
         }
@@ -69,39 +68,37 @@ public class Main {
         .start();
   }
 
-  private static Object compileSupplierCode(String codeText) throws Exception {
+  private static MySupplier compileSupplierCode(String codeText) throws Exception {
     // Save the code to a temporary file and compile it
     Path parentDir = Paths.get("temp");
     try (Stream<Path> paths = Files.walk(parentDir)) {
       paths.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
     }
     Files.createDirectories(parentDir);
-    Path tempFile = Paths.get(parentDir.toString(), "MySupplier.java");
+    Path tempFile = Paths.get(parentDir.toString(), "MySupplierImpl.java");
     Files.writeString(tempFile, codeText);
     JavaCompiler jc = javax.tools.ToolProvider.getSystemJavaCompiler();
     jc.run(null, null, null, tempFile.toFile().getAbsolutePath());
-    Path classFile = Objects.requireNonNull(tempFile.getParent()).resolve("MySupplier.class");
-    URLClassLoader classLoader =
-        URLClassLoader.newInstance(
-            new URL[] {Objects.requireNonNull(classFile.getParent()).toUri().toURL()}, null);
-    //    ClassLoader redefineClassLoader =
-    //        new ClassLoader() {
-    //          @Override
-    //          public Class<?> loadClass(String name) throws ClassNotFoundException {
-    //            if (name.equals("MySupplier")) {
-    //              try {
-    //                byte[] buf = Files.readAllBytes(classFile);
-    //                int len = buf.length;
-    //                return defineClass(name, buf, 0, len);
-    //              } catch (IOException e) {
-    //                throw new ClassNotFoundException("", e);
-    //              }
-    //            }
-    //            return getParent().loadClass(name);
-    //          }
-    //        };
-    return Class.forName("MySupplier", true, classLoader)
-        .getDeclaredConstructors()[0]
-        .newInstance();
+    Path classFile = Objects.requireNonNull(tempFile.getParent()).resolve("MySupplierImpl.class");
+    ClassLoader redefineClassLoader =
+        new ClassLoader() {
+          @Override
+          public Class<?> loadClass(String name) throws ClassNotFoundException {
+            if (name.equals("MySupplierImpl")) {
+              try {
+                byte[] buf = Files.readAllBytes(classFile);
+                int len = buf.length;
+                return defineClass(name, buf, 0, len);
+              } catch (IOException e) {
+                throw new ClassNotFoundException("", e);
+              }
+            }
+            return getParent().loadClass(name);
+          }
+        };
+    return (MySupplier)
+        Class.forName("MySupplierImpl", true, redefineClassLoader)
+            .getDeclaredConstructors()[0]
+            .newInstance();
   }
 }

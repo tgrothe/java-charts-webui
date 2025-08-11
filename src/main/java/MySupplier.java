@@ -1,24 +1,24 @@
-public class MySupplier {
-  public int numberOfSeries() {
-    return 2; // Return the number of series to be generated
-  }
+public interface MySupplier {
+  /**
+   * Returns the number of series to be generated.
+   *
+   * @return the number of series
+   */
+  int numberOfSeries();
 
-  public String getTitle(int seriesIndex) {
-    return "Series " + (seriesIndex + 1); // Return a title for each series
-  }
+  /**
+   * Returns the title for a specific series.
+   *
+   * @param seriesIndex the index of the series
+   * @return the title of the series
+   */
+  String getTitle(int seriesIndex);
 
-  public double[][] generateSeries(int seriesIndex) {
-    double[][] series = new double[10][2];
-    double a = seriesIndex * 10; // Example coefficient based on series index
-    for (int i = 0; i < series.length; i++) {
-      double y = f(i, a);
-      series[i][0] = i; // x value
-      series[i][1] = y; // y value based on the function
-    }
-    return series;
-  }
-
-  private double f(double x, double a) {
-    return x * x * a; // Example function
-  }
+  /**
+   * Generates a series of data points for a specific series.
+   *
+   * @param seriesIndex the index of the series
+   * @return a 2D array where each row contains [x, y] values for the series
+   */
+  double[][] generateSeries(int seriesIndex);
 }
