@@ -10,6 +10,7 @@ import org.knowm.xchart.XYChart;
 import org.knowm.xchart.XYChartBuilder;
 
 public class MyPlotter {
+  @Deprecated
   public static String plot(Object obj) throws Exception {
     Method numberOfSeries = obj.getClass().getMethod("numberOfSeries");
     Method generateSeries = obj.getClass().getMethod("generateSeries", int.class);
@@ -37,7 +38,6 @@ public class MyPlotter {
     return imgToBase64String(BitmapEncoder.getBufferedImage(chart));
   }
 
-  @Deprecated
   public static String plot(MySupplier supplier) {
     XYChart chart =
         new XYChartBuilder()
