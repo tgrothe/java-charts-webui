@@ -38,6 +38,7 @@ public class MyPlotter {
     return imgToBase64String(BitmapEncoder.getBufferedImage(chart));
   }
 
+  @Deprecated
   public static String plot(MySupplier supplier) {
     XYChart chart =
         new XYChartBuilder()
