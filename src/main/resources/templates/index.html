@@ -7,12 +7,12 @@
 </head>
 
 <body>
-<textarea id="code-ta" name="code-ta" rows="25" cols="80">${codetext}</textarea>
+<textarea id="code-ta" name="code-ta" rows="25"
+          cols="100">${codetext}</textarea>
 <br>
 <input type="button" value="Send Code" onclick="sendCode();">
-<p>
-    <img src="${imgsrc}" alt="Java Charts Webui">
-</p>
+<br><br>
+<img src="${imgsrc}" alt="Java Charts Webui">
 <script>
     function sendCode() {
         let code = document.getElementById("code-ta").value;

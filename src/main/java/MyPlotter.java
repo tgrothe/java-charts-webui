@@ -14,6 +14,7 @@ public class MyPlotter {
     Method numberOfSeries = obj.getClass().getMethod("numberOfSeries");
     Method generateSeries = obj.getClass().getMethod("generateSeries", int.class);
     Method getTitle = obj.getClass().getMethod("getTitle", int.class);
+    final int numberOfSeriesValue = (Integer) numberOfSeries.invoke(obj);
 
     XYChart chart =
         new XYChartBuilder()
@@ -23,7 +24,7 @@ public class MyPlotter {
             .xAxisTitle("x")
             .yAxisTitle("y")
             .build();
-    for (int i = 0; i < (Integer) numberOfSeries.invoke(obj); i++) {
+    for (int i = 0; i < numberOfSeriesValue; i++) {
       double[][] series = (double[][]) generateSeries.invoke(obj, i);
       double[] xData = new double[series.length];
       double[] yData = new double[series.length];
@@ -33,10 +34,10 @@ public class MyPlotter {
       }
       chart.addSeries((String) getTitle.invoke(obj, i), xData, yData);
     }
-    // Return the base64 encoded string
-    return "data:image/png;base64," + imgToBase64String(BitmapEncoder.getBufferedImage(chart));
+    return imgToBase64String(BitmapEncoder.getBufferedImage(chart));
   }
 
+  @Deprecated
   public static String plot(MySupplier supplier) {
     XYChart chart =
         new XYChartBuilder()
@@ -56,15 +57,14 @@ public class MyPlotter {
       }
       chart.addSeries(supplier.getTitle(i), xData, yData);
     }
-    // Return the base64 encoded string
-    return "data:image/png;base64," + imgToBase64String(BitmapEncoder.getBufferedImage(chart));
+    return imgToBase64String(BitmapEncoder.getBufferedImage(chart));
   }
 
   private static String imgToBase64String(RenderedImage img) {
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     try {
       ImageIO.write(img, "PNG", os);
-      return Base64.getEncoder().encodeToString(os.toByteArray());
+      return "data:image/png;base64," + Base64.getEncoder().encodeToString(os.toByteArray());
     } catch (IOException ioe) {
       throw new UncheckedIOException(ioe);
     }
