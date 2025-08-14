@@ -11,7 +11,7 @@
     <br><br>
     <input type="button" value="Send Code" onclick="sendCode();">
     <br><br>
-    <img src="${imgsrc}" alt="Java Charts Webui">
+    <img src="${imgsrc}" alt="Java Charts Webui" id="chart-img">
     <script type="module">
         import { EditorView, basicSetup } from "https://esm.sh/codemirror"
         import { java } from "https://esm.sh/@codemirror/lang-java"
@@ -22,9 +22,15 @@
         });
         function sendCode() {
             let code = encodeURIComponent(view.state.doc.toString());
-            window.location.replace("/code/" + code);
+            window.location.href = "/code/" + code;
         }
         window.sendCode = sendCode;
+    </script>
+    <script>
+        setTimeout(() => {
+            let elem = document.getElementById("chart-img");
+            elem.scrollIntoView({ block: "start", behavior: "smooth" });
+        }, 1000);
     </script>
 </body>
 
