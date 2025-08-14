@@ -21,4 +21,11 @@ public interface MySupplier {
    * @return a 2D array where each row contains [x, y] values for the series
    */
   double[][] generateSeries(int seriesIndex);
+
+  /**
+   * Generates a plot of the series data.
+   *
+   * @return a base64 encoded string representing the plot image
+   */
+  String plot();
 }
