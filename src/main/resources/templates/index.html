@@ -7,18 +7,25 @@
 </head>
 
 <body>
-<textarea id="code-ta" name="code-ta" rows="25"
-          cols="100">${codetext}</textarea>
-<br>
-<input type="button" value="Send Code" onclick="sendCode();">
-<br><br>
-<img src="${imgsrc}" alt="Java Charts Webui">
-<script>
-    function sendCode() {
-        let code = document.getElementById("code-ta").value;
-        location.href = "/code/" + encodeURIComponent(code);
-    }
-</script>
+    <div id="code-editor"></div>
+    <br><br>
+    <input type="button" value="Send Code" onclick="sendCode();">
+    <br><br>
+    <img src="${imgsrc}" alt="Java Charts Webui">
+    <script type="module">
+        import { EditorView, basicSetup } from "https://esm.sh/codemirror"
+        import { java } from "https://esm.sh/@codemirror/lang-java"
+        let view = new EditorView({
+            parent: document.getElementById("code-editor"),
+            doc: ${codetext},
+            extensions: [basicSetup, java()]
+        });
+        function sendCode() {
+            let code = encodeURIComponent(view.state.doc.toString());
+            window.location.replace("/code/" + code);
+        }
+        window.sendCode = sendCode;
+    </script>
 </body>
 
 </html>
