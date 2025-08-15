@@ -7,7 +7,7 @@
 </head>
 
 <body>
-    <div id="code-editor"></div>
+    <div id="code-editor" style="width: 800px;"></div>
     <br><br>
     <input type="button" value="Send Code" onclick="sendCode();">
     <br><br>
@@ -15,22 +15,34 @@
     <script type="module">
         import { EditorView, basicSetup } from "https://esm.sh/codemirror"
         import { java } from "https://esm.sh/@codemirror/lang-java"
+        import * as lang from "https://esm.sh/@codemirror/language"
         let view = new EditorView({
             parent: document.getElementById("code-editor"),
             doc: ${codetext},
             extensions: [basicSetup, java()]
         });
+        {
+            // Fold the method plot() in the code:
+            let d = view.state.doc;
+            for (let i = d.lines; i > 0; i--) {
+                let line = d.line(i);
+                if (line.text.includes("public String plot()")) {
+                    let range = lang.foldable(view.state, line.from, line.to);
+                    if (range) {
+                        console.log("Folding ...", range);
+                        view.dispatch({ effects: [lang.foldEffect.of(range)] });
+                    }
+                    break;
+                }
+            }
+        }
+        // Scroll to the chart image after the editor is ready
+        document.getElementById("chart-img").scrollIntoView({ block: "start", behavior: "smooth" });
         function sendCode() {
             let code = encodeURIComponent(view.state.doc.toString());
             window.location.href = "/code/" + code;
         }
         window.sendCode = sendCode;
-    </script>
-    <script>
-        setTimeout(() => {
-            let elem = document.getElementById("chart-img");
-            elem.scrollIntoView({ block: "start", behavior: "smooth" });
-        }, 1000);
     </script>
 </body>
 
