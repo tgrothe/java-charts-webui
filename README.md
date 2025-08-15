@@ -9,3 +9,7 @@ You can run `java -jar java-charts-webui.jar` to start the server. The server wi
 I had some problems with Windows 11, but I can't figure out what caused them. So if in doubt, use a Linux system. Also make sure that only you can access the web server.
 
 Its use is largely self-explanatory: adjust the code for generating the functions and click on Send Code; the result will then be visible below.
+
+## Demo
+
+![Demo](screen-1.gif)
