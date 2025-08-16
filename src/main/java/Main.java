@@ -1,15 +1,12 @@
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -79,18 +76,22 @@ public class Main {
     server.createContext(
         "/",
         exchange -> {
-          System.out.println("Received request for / : " + exchange.getRequestURI());
-          String response = getTemplate("index.html", CODE_TEXT, EMPTY_IMG_SRC);
-          exchange.getResponseHeaders().add("Content-Type", "text/html; charset=UTF-8");
-          exchange.sendResponseHeaders(200, response.length());
-          OutputStream os = exchange.getResponseBody();
-          os.write(response.getBytes(StandardCharsets.UTF_8));
-          os.close();
+          System.out.println("Received request for /: " + exchange.getRequestURI());
+          try {
+            String response = getTemplate("index.html", CODE_TEXT, EMPTY_IMG_SRC);
+            exchange.getResponseHeaders().add("Content-Type", "text/html; charset=UTF-8");
+            exchange.sendResponseHeaders(200, response.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes(StandardCharsets.UTF_8));
+            os.close();
+          } catch (Exception e) {
+            handleException(exchange, e);
+          }
         });
     server.createContext(
         "/code",
         exchange -> {
-          System.out.println("Received request for /code : " + exchange.getRequestURI());
+          System.out.println("Received request for /code: " + exchange.getRequestURI());
           try {
             String codeText =
                 URLDecoder.decode(
@@ -103,19 +104,23 @@ public class Main {
             os.write(response.getBytes(StandardCharsets.UTF_8));
             os.close();
           } catch (Exception e) {
-            String errorResponse =
-                String.format(
-                    "Error compiling code: %s%n%n%s",
-                    e.getMessage(), Arrays.toString(e.getStackTrace()));
-            exchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
-            exchange.sendResponseHeaders(500, errorResponse.length());
-            OutputStream os = exchange.getResponseBody();
-            os.write(errorResponse.getBytes(StandardCharsets.UTF_8));
-            os.close();
+            handleException(exchange, e);
           }
         });
     server.setExecutor(null); // creates a default executor
     server.start();
+  }
+
+  private static void handleException(HttpExchange exchange, Exception e) throws IOException {
+    StringWriter sw = new StringWriter();
+    PrintWriter pw = new PrintWriter(sw);
+    e.printStackTrace(pw);
+    String sStackTrace = sw.toString();
+    exchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
+    exchange.sendResponseHeaders(500, sStackTrace.length());
+    OutputStream os = exchange.getResponseBody();
+    os.write(sStackTrace.getBytes(StandardCharsets.UTF_8));
+    os.close();
   }
 
   private static String getTemplate(String name, String codetext, String imgsrc)
