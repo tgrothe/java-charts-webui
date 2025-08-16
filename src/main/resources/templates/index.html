@@ -11,14 +11,14 @@
     <br><br>
     <input type="button" value="Send Code" onclick="sendCode();">
     <br><br>
-    <img src="${imgsrc}" alt="Java Charts Webui" id="chart-img">
+    <img src="{{imgsrc}}" alt="Java Charts Webui" id="chart-img">
     <script type="module">
         import { EditorView, basicSetup } from "https://esm.sh/codemirror"
         import { java } from "https://esm.sh/@codemirror/lang-java"
         import * as lang from "https://esm.sh/@codemirror/language"
         let view = new EditorView({
             parent: document.getElementById("code-editor"),
-            doc: ${codetext},
+            doc: `{{codetext}}`,
             extensions: [basicSetup, java()]
         });
         {

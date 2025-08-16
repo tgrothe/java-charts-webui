@@ -1,11 +1,15 @@
-import com.hellokaton.blade.Blade;
+import com.sun.net.httpserver.HttpServer;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -70,35 +74,66 @@ public class Main {
   private static final String EMPTY_IMG_SRC =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=";
 
-  public static void main(String[] args) {
-    Blade.create()
-        .get(
-            "/",
-            ctx -> {
-              ctx.attribute("codetext", "`" + CODE_TEXT + "`");
-              ctx.attribute("imgsrc", EMPTY_IMG_SRC);
-              ctx.render("index.html");
-            })
-        .get(
-            "/code/:code",
-            ctx -> {
-              try {
-                String codeText = URLDecoder.decode(ctx.pathString("code"), StandardCharsets.UTF_8);
-                ctx.attribute("codetext", "`" + codeText + "`");
-                ctx.attribute("imgsrc", compileSupplierCode(codeText).plot());
-                ctx.render("index.html");
-              } catch (Exception e) {
-                e.printStackTrace();
-                ctx.text("Error compiling code: " + e.getMessage());
-              }
-            })
-        .listen(80)
-        .start();
+  public static void main(String[] args) throws IOException {
+    HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
+    server.createContext(
+        "/",
+        exchange -> {
+          System.out.println("Received request for / : " + exchange.getRequestURI());
+          String response = getTemplate("index.html", CODE_TEXT, EMPTY_IMG_SRC);
+          exchange.getResponseHeaders().add("Content-Type", "text/html; charset=UTF-8");
+          exchange.sendResponseHeaders(200, response.length());
+          OutputStream os = exchange.getResponseBody();
+          os.write(response.getBytes(StandardCharsets.UTF_8));
+          os.close();
+        });
+    server.createContext(
+        "/code",
+        exchange -> {
+          System.out.println("Received request for /code : " + exchange.getRequestURI());
+          try {
+            String codeText =
+                URLDecoder.decode(
+                    exchange.getRequestURI().toString().substring(6), StandardCharsets.UTF_8);
+            String imgSrc = compileSupplierCode(codeText).plot();
+            String response = getTemplate("index.html", codeText, imgSrc);
+            exchange.getResponseHeaders().add("Content-Type", "text/html; charset=UTF-8");
+            exchange.sendResponseHeaders(200, response.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes(StandardCharsets.UTF_8));
+            os.close();
+          } catch (Exception e) {
+            String errorResponse =
+                String.format(
+                    "Error compiling code: %s%n%n%s",
+                    e.getMessage(), Arrays.toString(e.getStackTrace()));
+            exchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
+            exchange.sendResponseHeaders(500, errorResponse.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(errorResponse.getBytes(StandardCharsets.UTF_8));
+            os.close();
+          }
+        });
+    server.setExecutor(null); // creates a default executor
+    server.start();
+  }
+
+  private static String getTemplate(String name, String codetext, String imgsrc)
+      throws IOException {
+    try (InputStream templateStream = Main.class.getResourceAsStream("templates/" + name)) {
+      assert templateStream != null;
+      String template = new String(templateStream.readAllBytes(), StandardCharsets.UTF_8);
+      return template.replace("{{codetext}}", codetext).replace("{{imgsrc}}", imgsrc);
+    }
   }
 
   private static MySupplier compileSupplierCode(String codeText) throws Exception {
     // Save the code to a temporary file and compile it
     Path parentDir = Paths.get("temp");
+    if (!Files.exists(parentDir)) {
+      Files.createDirectories(parentDir);
+    }
+    // Clean up the directory by deleting all files and subdirectories
     try (Stream<Path> paths = Files.walk(parentDir)) {
       paths.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
     }
