@@ -141,7 +141,7 @@ public class Main {
             .boxed()
             .collect(
                 Collectors.toMap(
-                    i -> i + "", // key is the index as a string
+                    i -> "" + i, // key is the index as a string
                     i -> args[i] // value is the corresponding argument
                     )),
         "{{",
