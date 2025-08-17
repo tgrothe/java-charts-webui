@@ -7,10 +7,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import javax.tools.JavaCompiler;
+import org.apache.commons.text.StringSubstitutor;
 
 public class Main {
   private static final String CODE_TEXT =
@@ -70,6 +74,7 @@ public class Main {
       """;
   private static final String EMPTY_IMG_SRC =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=";
+  private static final HashMap<String, String> templates = new HashMap<>();
 
   public static void main(String[] args) throws IOException {
     HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
@@ -78,7 +83,7 @@ public class Main {
         exchange -> {
           System.out.println("Received request for /: " + exchange.getRequestURI());
           try {
-            String response = getTemplate("index.html", CODE_TEXT, EMPTY_IMG_SRC);
+            String response = getTemplate("templates/index.html", CODE_TEXT, EMPTY_IMG_SRC);
             exchange.getResponseHeaders().add("Content-Type", "text/html; charset=UTF-8");
             exchange.sendResponseHeaders(200, response.length());
             OutputStream os = exchange.getResponseBody();
@@ -97,7 +102,7 @@ public class Main {
                 URLDecoder.decode(
                     exchange.getRequestURI().toString().substring(6), StandardCharsets.UTF_8);
             String imgSrc = compileSupplierCode(codeText).plot();
-            String response = getTemplate("index.html", codeText, imgSrc);
+            String response = getTemplate("templates/index.html", codeText, imgSrc);
             exchange.getResponseHeaders().add("Content-Type", "text/html; charset=UTF-8");
             exchange.sendResponseHeaders(200, response.length());
             OutputStream os = exchange.getResponseBody();
@@ -123,13 +128,29 @@ public class Main {
     os.close();
   }
 
-  private static String getTemplate(String name, String codetext, String imgsrc)
-      throws IOException {
-    try (InputStream templateStream = Main.class.getResourceAsStream("templates/" + name)) {
-      assert templateStream != null;
-      String template = new String(templateStream.readAllBytes(), StandardCharsets.UTF_8);
-      return template.replace("{{codetext}}", codetext).replace("{{imgsrc}}", imgsrc);
+  private static String getTemplate(String path, String... args) throws IOException {
+    if (!templates.containsKey(path)) {
+      try (InputStream templateStream = Main.class.getResourceAsStream(path)) {
+        assert templateStream != null;
+        templates.put(path, new String(templateStream.readAllBytes(), StandardCharsets.UTF_8));
+      }
     }
+    AtomicInteger ai = new AtomicInteger(0);
+    return StringSubstitutor.replace(
+        templates.get(path),
+        Arrays.stream(args)
+            .reduce(
+                new HashMap<>(),
+                (map, element) -> {
+                  map.put(ai.getAndIncrement() + "", element);
+                  return map;
+                },
+                (map1, map2) -> {
+                  map1.putAll(map2);
+                  return map1;
+                }),
+        "{{",
+        "}}");
   }
 
   private static MySupplier compileSupplierCode(String codeText) throws Exception {
