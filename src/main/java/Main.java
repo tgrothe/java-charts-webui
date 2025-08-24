@@ -1,20 +1,12 @@
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpServer;
 import java.io.*;
-import java.net.InetSocketAddress;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import javax.tools.JavaCompiler;
-import org.apache.commons.text.StringSubstitutor;
+import org.apache.commons.lang3.exception.UncheckedException;
 
 public class Main {
   private static final String CODE_TEXT =
@@ -74,78 +66,36 @@ public class Main {
       """;
   private static final String EMPTY_IMG_SRC =
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=";
-  private static final HashMap<String, String> templates = new HashMap<>();
 
   public static void main(String[] args) throws IOException {
-    HttpServer server = HttpServer.create(new InetSocketAddress(80), 0);
-    server.createContext(
-        "/",
-        exchange -> {
-          System.out.println("Received request for /: " + exchange.getRequestURI());
-          try {
-            String response = getTemplate("templates/index.html", CODE_TEXT, EMPTY_IMG_SRC);
-            exchange.getResponseHeaders().add("Content-Type", "text/html; charset=UTF-8");
-            exchange.sendResponseHeaders(200, response.length());
-            OutputStream os = exchange.getResponseBody();
-            os.write(response.getBytes(StandardCharsets.UTF_8));
-            os.close();
-          } catch (Exception e) {
-            handleException(exchange, e);
-          }
-        });
-    server.createContext(
-        "/code",
-        exchange -> {
-          System.out.println("Received request for /code: " + exchange.getRequestURI());
-          try {
-            String codeText =
-                URLDecoder.decode(
-                    exchange.getRequestURI().toString().substring(6), StandardCharsets.UTF_8);
-            String imgSrc = compileSupplierCode(codeText).plot();
-            String response = getTemplate("templates/index.html", codeText, imgSrc);
-            exchange.getResponseHeaders().add("Content-Type", "text/html; charset=UTF-8");
-            exchange.sendResponseHeaders(200, response.length());
-            OutputStream os = exchange.getResponseBody();
-            os.write(response.getBytes(StandardCharsets.UTF_8));
-            os.close();
-          } catch (Exception e) {
-            handleException(exchange, e);
-          }
-        });
-    server.setExecutor(null); // creates a default executor
-    server.start();
-  }
-
-  private static void handleException(HttpExchange exchange, Exception e) throws IOException {
-    StringWriter sw = new StringWriter();
-    PrintWriter pw = new PrintWriter(sw);
-    e.printStackTrace(pw);
-    String sStackTrace = sw.toString();
-    exchange.getResponseHeaders().add("Content-Type", "text/plain; charset=UTF-8");
-    exchange.sendResponseHeaders(500, sStackTrace.length());
-    OutputStream os = exchange.getResponseBody();
-    os.write(sStackTrace.getBytes(StandardCharsets.UTF_8));
-    os.close();
-  }
-
-  private static String getTemplate(String path, String... args) throws IOException {
-    if (!templates.containsKey(path)) {
-      try (InputStream templateStream = Main.class.getResourceAsStream(path)) {
-        assert templateStream != null;
-        templates.put(path, new String(templateStream.readAllBytes(), StandardCharsets.UTF_8));
-      }
-    }
-    return StringSubstitutor.replace(
-        templates.get(path),
-        IntStream.range(0, args.length)
-            .boxed()
-            .collect(
-                Collectors.toMap(
-                    i -> "" + i, // key is the index as a string
-                    i -> args[i] // value is the corresponding argument
-                    )),
-        "{{",
-        "}}");
+    MyHttpServer.start(
+        new MyHttpServer.MyHttpHandler(
+            "/",
+            exchange ->
+                MyHttpServer.sendCustomResponse(
+                    exchange,
+                    200,
+                    MyHttpServer.ContentType.HTML,
+                    "templates/index.html",
+                    CODE_TEXT,
+                    EMPTY_IMG_SRC)),
+        new MyHttpServer.MyHttpHandler(
+            "/code",
+            exchange -> {
+              try {
+                String codeText = MyHttpServer.getPathPart(exchange, 2);
+                String imgSrc = compileSupplierCode(codeText).plot();
+                MyHttpServer.sendCustomResponse(
+                    exchange,
+                    200,
+                    MyHttpServer.ContentType.HTML,
+                    "templates/index.html",
+                    codeText,
+                    imgSrc);
+              } catch (Exception e) {
+                throw new UncheckedException(e);
+              }
+            }));
   }
 
   private static MySupplier compileSupplierCode(String codeText) throws Exception {
