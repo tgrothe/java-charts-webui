@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MyHttpServer {
-  public record MyPreHttpHandler(Function<HttpHandler, Boolean> preHandler) {}
+  public record MyPreHttpHandler(Function<HttpExchange, Boolean> preHandler) {}
 
   public record MyHttpHandler(String path, HttpHandler handler) {}
 
@@ -64,7 +64,7 @@ public class MyHttpServer {
             try {
               synchronized (LOCK) {
                 if (preHandler != null) {
-                  if (preHandler.preHandler().apply(handler.handler())) {
+                  if (preHandler.preHandler().apply(exchange)) {
                     handler.handler().handle(exchange);
                   }
                 } else {
