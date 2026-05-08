@@ -4,17 +4,17 @@ Web user interface for creating charts and diagrams.
 
 ## Usage
 
-You can run `java -jar java-charts-webui.jar` to start the server. The server will be bound to `127.0.0.1:80`, so you should be able to open http://localhost/ in your browser. Stop the server using `Ctrl`+`C`. Also make sure that only you can access to the server, as it is not secured in any way.
+You can run `java -jar java-charts-webui.jar` to start the server. The server will be bound to `0.0.0.0:80`, so you should be able to open http://localhost/ in your browser. Stop the server using `Ctrl`+`C`.
 
 Its use is largely self-explanatory: adjust the code for generating the functions and click on Send Code; the result will then be visible below.
 
 ## Demo
 
-Showcase of the web interface:
+The web interface:
 
 ![Demo](screen-1.gif)
 
-Example of what is technically possible:
+Example code:
 
 ```java
 import org.knowm.xchart.BitmapEncoder;
@@ -83,7 +83,7 @@ public class MySupplierImpl implements MySupplier {
 
 ![Example](example-1.png)
 
-<sub>By the way: I haven't yet figured out how to influence the scaling of the y-axis, but theoretically this should also be possible.</sub>
+<sub>By the way: I haven't figured out yet how to adjust the y-axis scale, but in theory, that should be possible too.</sub>
 
 ## Contributing
 
