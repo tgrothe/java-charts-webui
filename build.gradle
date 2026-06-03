@@ -21,7 +21,7 @@ dependencies {
     implementation 'org.knowm.xchart:xchart:3.8.8'
     implementation 'org.slf4j:slf4j-simple:2.0.17'
     implementation 'io.javalin:javalin:7.2.0'
-    implementation 'org.json:json:20251224'
+    implementation 'org.json:json:20260522'
 }
 
 java {
